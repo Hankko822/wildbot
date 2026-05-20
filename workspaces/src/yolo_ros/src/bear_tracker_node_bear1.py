@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import rclpy
+import time
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import PointStamped, Point
@@ -35,6 +36,7 @@ class Bear1TrackerNode(Node):
     def __init__(self):
         super().__init__('bear1_tracker_node')
         self.model = YOLO("/workspaces/src/yolo_ros/weights/best.pt")
+        self.prev_frame_time = 0
         self.bridge = CvBridge()
         self.rgb_sub = message_filters.Subscriber(self, Image, '/camera/color/image_raw', qos_profile=qos_profile_sensor_data)
         self.dep_sub = message_filters.Subscriber(self, Image, '/camera/depth/image_raw', qos_profile=qos_profile_sensor_data)
@@ -51,6 +53,11 @@ class Bear1TrackerNode(Node):
 
     def image_callback(self, rgb_msg, dep_msg):
         try:
+            current_time = time.time()
+            fps = 0.0
+            if self.prev_frame_time != 0:
+                fps = 1.0 / (current_time - self.prev_frame_time)
+            self.prev_frame_time = current_time
             trans = self.tf_buffer.lookup_transform('base_link', rgb_msg.header.frame_id, rclpy.time.Time())
             rgb_img = self.bridge.imgmsg_to_cv2(rgb_msg, "bgr8")
             dep_img = self.bridge.imgmsg_to_cv2(dep_msg, "16UC1")
@@ -94,6 +101,7 @@ class Bear1TrackerNode(Node):
                 self.pub.publish(closest_bear)
                 cv2.putText(annotated_frame, f"Dist:{closest_bear.x}m Ang:{closest_bear.y} H:{closest_bear.z}m", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
+            cv2.putText(annotated_frame, f"FPS: {int(fps)}", (10, 35), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
             cv2.imshow("Bear1 Tracker", annotated_frame)
             cv2.waitKey(1)
         except Exception as e:
