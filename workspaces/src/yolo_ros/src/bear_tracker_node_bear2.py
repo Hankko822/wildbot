@@ -107,7 +107,7 @@ class Bear2TrackerNode(Node):
             cv2.imshow("Bear2 Hybrid Tracker", annotated_frame)
             cv2.waitKey(1)
         except Exception as e:
-            pass
+            self.get_logger().error(f"⚠️ 視覺迴圈發生錯誤: {e}")
 
 def main(args=None):
     rclpy.init(args=args)
