@@ -156,7 +156,7 @@ class Bear1TrackerNode(Node):
         
         # 🌟 【設定區】手臂長度變數 (單位：公尺)
         # 未來如果換了夾爪或手臂，只要改這裡的數字就可以了！
-        self.arm_length = 0.35  
+        self.arm_length = 0.30
         
         self.prev_frame_time = 0
         self.bridge = CvBridge()
